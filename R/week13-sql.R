@@ -20,6 +20,11 @@
 ## Display the total number of unique managers (i.e., unique by id number).
 
 ## Display a summary of the number of managers split by location, but only include those who were not originally hired as managers.
+SELECT location, COUNT(*) AS num_managers
+FROM employees
+WHERE position = 'Manager'
+AND hired_as_manager = 'No'
+GROUP BY location;
 
 ## Display the mean and standard deviation of number of years of employment split by performance level (bottom, middle, and top) - in addition to dplyr functions, you can use mean() and sd() for this task.
 

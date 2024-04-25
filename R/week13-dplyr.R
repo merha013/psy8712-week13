@@ -14,39 +14,43 @@ conn <- dbConnect(MariaDB(),
 
 show_databases <- dbGetQuery(conn,"SHOW DATABASES;") # show available databases
 dbExecute(conn, "USE cla_tntlab;")
-dbExecute(conn, "USE performance_schema;")
-dbExecute(conn, "USE information_schema;")
 
 ## download all three datasets on the UMN SQL server
-employees_tbl <- dbGetQuery(conn, "SELECT * FROM cla_tntlab;")
-testscores_tbl <- dbGetQuery(conn, "SELECT * FROM performance_schema;")
-offices_tbl <- dbGetQuery(conn, "SELECT * FROM information_schema;")
+employees_tbl <- dbGetQuery(conn, "SELECT * FROM 
+                            cla_tntlab.datascience_employees;")
+testscores_tbl <- dbGetQuery(conn, "SELECT * FROM 
+                             cla_tntlab.datascience_testscores;")
+offices_tbl <- dbGetQuery(conn, "SELECT * FROM 
+                          cla_tntlab.datascience_offices;")
 
 ## Save them as .csv files 
-employees_tbl <- write.csv(employees_tbl, 
-                           "../data/employees.csv", row.names=FALSE)
-testscores_tbl <- write.csv(testscores_tbl, 
-                            "../data/testscores.csv", row.names=FALSE)
-offices_tbl <- write.csv(offices_tbl, 
-                         "../data/offices.csv", row.names=FALSE)
+write_csv(employees_tbl, "../data/employees.csv")
+write_csv(testscores_tbl, "../data/testscores.csv")
+write_csv(offices_tbl, "../data/offices.csv")
+
+dbDisconnect(conn) # warning msg advised to use this when finished w/connection
 
 ## Combine the data with joins only
 week13_tbl <- employees_tbl %>%
-  left_join(testscores_tbl, by = "employee_id") %>%
-  left_join(offices_tbl, by = "employee_id") %>%
-  filter(!is.na(test_score)) # Remove employees without test scores
+  inner_join(testscores_tbl, by = join_by(employee_id)) %>% 
+    ## inner_join only keeps observations from x that have a matching key in y
+  full_join(offices_tbl, by = join_by("city" == "office"))
 
 ## Save this file as week13.csv and place in out folder
-write.csv(week13_tbl, "../out/week13.csv", row.names = FALSE)
+write_csv(week13_tbl, "../out/week13.csv")
 
 
 # Analysis
-## Using dplyr functions alone (do not use base), do the following:
-## Display the total number of managers.
+nrow(week13_tbl) # total number of managers
+length(unique(week13_tbl$employee_id)) # total number of unique managers by ID
+  ## unique returns a vector with duplicates removed, but there were none
 
-## Display the total number of unique managers (i.e., unique by id number).
-
-## Display a summary of the number of managers split by location, but only include those who were not originally hired as managers.
+## summary of number of managers
+week13_tbl %>%
+  filter(manager_hire == "N") %>% 
+    ## include only those who were not originally hired as managers
+  group_by(city) %>% # split by location (city)
+  View
 
 ## Display the mean and standard deviation of number of years of employment split by performance level (bottom, middle, and top) - in addition to dplyr functions, you can use mean() and sd() for this task.
 
