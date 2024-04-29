@@ -44,11 +44,14 @@ write_csv(week13_tbl, "../out/week13.csv")
 # Analysis
 
 ## Total number of managers
-summary1 <- nrow(week13_tbl)  
+summary1 <- week13_tbl %>%
+  summarise(total_rows = n())
 print(summary1)
 
 ## Total number of unique managers by ID
-summary2 <- length(unique(week13_tbl$employee_id))  
+summary2 <- week13_tbl %>%
+  distinct(employee_id) %>%
+  count
   ## unique() returns a vector w/duplicates removed, but there were none
 print(summary2)
 
@@ -69,7 +72,8 @@ print(summary4)
 
 ## Display manager location type, ID, & test score
 summary5 <- week13_tbl %>%  
-  select(employee_id, type, test_score) %>%
+  dplyr::select(type, employee_id, test_score) %>% 
+    ## it wouldn't work without putting dplyr first...
   arrange(type, desc(test_score))
     ## arranged in alphabetical order by location type 
     ## then descending order of test score
